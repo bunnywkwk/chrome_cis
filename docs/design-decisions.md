@@ -50,6 +50,8 @@ Scope: **Google Chrome (`google-chrome-*` RPM) on RHEL 8, 9, 10**, CIS Google Ch
   - **Full run vs limited run:** `prelim.yml` starts `chrome_cis_policies` **empty on a full run**, so the file always
     matches the current settings (a rule switched off is removed on the next run); with `--tags`/`--skip-tags` it
     starts from the **current file**, so only the selected rules change (`ansible_run_tags`, `ansible_skip_tags`).
+    **Revised 2026-10-11 (user):** the role is not run with tags (exceptions are rule switches), so prelim no longer
+    reads the current file: every run starts empty. A run limited by `--tags` would now write only the selected rules.
   - **Not adopted:** one policy file per rule (`managed/cis_<id>.json`, ~101 files; user preferred one file).
   - The data-driven variants (rule list + Jinja loop, `set_fact` loop, baseline files) were built and tested on
     branches `staging`, `staging-option-b`, `staging-option-c`; kept as history.

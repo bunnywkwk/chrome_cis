@@ -67,8 +67,7 @@ Internal values only; no rule list (D3 revised).
 | version / OS asserts | stop early with a clear message on an unsupported control node or target | D12 (the role-settings check was removed 2026-10-09: user decision) |
 | `package_facts` | list installed RPMs | D10 |
 | block + `meta: end_host` | no Chrome and no install → skip this host, `failed=0` | D10 |
-| `slurp` current `chrome_cis.json`, `failed_when: false` | reads the file if it exists | start point for `--tags` / `--skip-tags` runs |
-| `Start the policy set` | full run (`ansible_run_tags == ['all']`, no skip tags): `{}`; otherwise the current file | full run = file matches the settings (rule off is removed); limited run changes only the selected rules (D3 revised) |
+| `Start the policy set` | `chrome_cis_policies: {}` on every run | the file always matches the settings; a rule switched off is removed (D3, revised 2026-10-11) |
 
 ## tasks/install.yml
 
@@ -104,5 +103,5 @@ Writes the file and reports.
 | Key | Does | Why |
 |-----|------|-----|
 | `file` managed/ 0755 | creates the folder (the RPM doesn't) | D-2 |
-| `copy` `content: chrome_cis_policies \| to_nice_json(sort_keys=true)` | one file; unchanged content = no change | idempotent, `--check --diff` (D2) |
+| `copy` `content: chrome_cis_policies \| to_nice_json` (sorted by default) | one file; unchanged content = no change | idempotent, `--check --diff` (D2) |
 | report | benchmark, Chrome version, file, number of policies written, levels, the 16 N/A rules | plain facts; the site's exceptions are in its `group_vars` (D8) |

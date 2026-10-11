@@ -10,7 +10,7 @@
 - name: "POST | PATCH | Write {{ chrome_cis_policy_file }}"
   ansible.builtin.copy:
     dest: "{{ chrome_cis_policy_dir }}/{{ chrome_cis_policy_file }}"
-    content: "{{ chrome_cis_policies | to_nice_json(sort_keys=true) }}\n"
+    content: "{{ chrome_cis_policies | to_nice_json }}\n"
     owner: root
     group: root
     mode: "0644"

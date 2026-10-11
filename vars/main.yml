@@ -4,7 +4,6 @@
 
 chrome_cis_benchmark: "CIS Google Chrome Benchmark v3.0.0"
 chrome_cis_supported_os_majors: ["8", "9", "10"]
-chrome_cis_supported_arch: x86_64
 chrome_cis_channels: [stable, beta, unstable, canary]
 
 # Same repo as Google's own /etc/yum.repos.d/google-chrome.repo; it holds every channel (D9, D10)
