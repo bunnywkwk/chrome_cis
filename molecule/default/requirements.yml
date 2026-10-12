@@ -1,0 +1,6 @@
+---
+# Collection molecule's podman driver needs to drive the containers (the role itself uses ansible.builtin only).
+# Same pin as on the agent VM (docs: ci-jenkins-agent-guide.md); the driver needs >= 1.8.1.
+collections:
+  - name: containers.podman
+    version: ">=1.8.1,<2.0.0"

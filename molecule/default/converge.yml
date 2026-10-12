@@ -1,0 +1,9 @@
+---
+- name: Converge | Apply chrome_cis
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Converge | Run the role from this checkout
+      ansible.builtin.include_role:
+        # Full path, not a name: molecule 26 does not put the role's parent folder on the roles path
+        name: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}"

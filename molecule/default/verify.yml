@@ -1,0 +1,132 @@
+---
+# Read-only compliance check: one JUnit test case per CIS rule, plus the policy files and browser versions as evidence.
+- name: Verify | CIS Google Chrome Benchmark v3.0.0 policy values
+  hosts: all
+  gather_facts: false
+  vars_files:
+    - vars/expected-policies.yml
+  vars:
+    policy_file_name: chrome_cis.json
+    report_dir: >-
+      {{ lookup('ansible.builtin.env', 'MOLECULE_REPORT_DIR')
+         | default(lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY'), true) }}
+  tasks:
+    - name: Verify | Read installed packages
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    # Any Chrome channel counts as Chrome; chromium$ skips chromium-common and chromium-headless
+    - name: Verify | Find the installed browsers and their policy folders
+      ansible.builtin.set_fact:
+        verify_browsers: >-
+          {{ ansible_facts['packages'] | dict2items | selectattr('key', 'match', 'google-chrome-|chromium$')
+             | map(attribute='value.0') | items2dict(key_name='name', value_name='version') }}
+        verify_folders: >-
+          {{ (['/etc/opt/chrome/policies/managed'] if ansible_facts['packages'] | select('match', 'google-chrome-') | list else [])
+           + (['/etc/chromium/policies/managed'] if 'chromium' in ansible_facts['packages'] else []) }}
+
+    - name: Verify | Lowest browser major version (the one the gates use)
+      ansible.builtin.set_fact:
+        verify_major: "{{ verify_browsers.values() | map('regex_replace', '[.].*', '') | map('int') | min }}"
+
+    - name: Verify | The browsers this host should have
+      ansible.builtin.assert:
+        that:
+          - verify_folders | length == (2 if 'chrome_and_chromium' in group_names else 1)
+        fail_msg: "Found {{ verify_browsers }}; host groups {{ group_names }}."
+
+    - name: Verify | Stat the policy files
+      ansible.builtin.stat:
+        path: "{{ item }}/{{ policy_file_name }}"
+      loop: "{{ verify_folders }}"
+      register: verify_stats
+
+    - name: Verify | Policy files exist, root-owned, 0644
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.pw_name == 'root'
+          - item.stat.gr_name == 'root'
+          - item.stat.mode == '0644'
+        fail_msg: "{{ item.item }}/{{ policy_file_name }} is missing or has the wrong owner/mode."
+      loop: "{{ verify_stats.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Verify | Read the policy files
+      ansible.builtin.slurp:
+        src: "{{ item }}/{{ policy_file_name }}"
+      loop: "{{ verify_folders }}"
+      register: verify_raw
+
+    - name: Verify | Parse the policy files
+      ansible.builtin.set_fact:
+        verify_contents: "{{ verify_raw.results | map(attribute='content') | map('b64decode') | list }}"
+        verify_policies: "{{ verify_raw.results[0].content | b64decode | from_json }}"
+
+    - name: Verify | Same file in every policy folder
+      ansible.builtin.assert:
+        that:
+          - verify_contents | unique | length == 1
+        fail_msg: "The policy files in {{ verify_folders | join(' and ') }} differ."
+
+    - name: Verify | Decide per rule whether its policy belongs on this browser version
+      ansible.builtin.set_fact:
+        verify_expected: >-
+          {{ verify_expected | default([])
+             + [item | combine({'applies': not (item.off_on_rhel | default(false))
+                                           and (item.versions is not defined
+                                                or item.versions[0] <= verify_major | int <= item.versions[1])})] }}
+      loop: "{{ chrome_cis_expected }}"
+      loop_control:
+        label: "{{ item.rule }} {{ item.policy }}"
+
+    # Read the value inline: a task var would turn numbers into strings on ansible-core 2.16 (1 != "1").
+    - name: Verify | Compare every rule with its benchmark value (ABSENT when it does not apply)
+      ansible.builtin.set_fact:
+        verify_results: >-
+          {{ verify_results | default([])
+             + [item | combine({'expected': item.value if item.applies else 'ABSENT',
+                                'actual': verify_policies[item.policy] | default('ABSENT'),
+                                'pass': (verify_policies[item.policy] | default('ABSENT'))
+                                        == (item.value if item.applies else 'ABSENT')})] }}
+      loop: "{{ verify_expected }}"
+      loop_control:
+        label: "{{ item.rule }} {{ item.policy }}"
+
+    - name: Verify | Find policies the benchmark does not ask for
+      ansible.builtin.set_fact:
+        verify_unexpected: "{{ verify_policies.keys() | difference(chrome_cis_expected | map(attribute='policy')) }}"
+
+    - name: Verify | Save the evidence on the controller
+      delegate_to: localhost
+      block:
+        - name: Verify | Save the evidence on the controller | Report folder
+          ansible.builtin.file:
+            path: "{{ report_dir }}"
+            state: directory
+            mode: "0755"
+
+        - name: Verify | Save the evidence on the controller | JUnit report
+          ansible.builtin.template:
+            src: junit.xml.j2
+            dest: "{{ report_dir }}/cis-verify-{{ inventory_hostname }}.xml"
+            mode: "0644"
+
+        - name: Verify | Save the evidence on the controller | Policy file as written
+          ansible.builtin.copy:
+            content: "{{ verify_contents[0] }}"
+            dest: "{{ report_dir }}/chrome_cis-{{ inventory_hostname }}.json"
+            mode: "0644"
+
+    - name: Verify | All rules compliant, no unexpected policies
+      ansible.builtin.assert:
+        that:
+          - verify_results | rejectattr('pass') | list | length == 0
+          - verify_unexpected | length == 0
+        fail_msg:
+          - "Failed rules: {{ verify_results | rejectattr('pass') | map(attribute='rule') | join(', ') }}"
+          - "Unexpected policies: {{ verify_unexpected | join(', ') }}"
+        success_msg: >-
+          {{ verify_results | length }} rules compliant on {{ inventory_hostname }}
+          ({{ verify_browsers.items() | map('join', ' ') | join(', ') }}; gates use version {{ verify_major }}).

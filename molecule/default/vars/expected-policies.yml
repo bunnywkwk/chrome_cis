@@ -1,0 +1,115 @@
+---
+# Expected policy values for this scenario (Level 1 + Level 2; site value set only for 2.3.5, so its gate is tested).
+# Source: CIS Google Chrome Benchmark v3.0.0, via docs/cis-requirements.md, not the role tasks.
+# "Disabled" exception lists are expected as [] (role decision D7).
+# versions: [first, last] = supported_on range in Chromium's policy definitions
+#   (docs/evidence-files/chromium-supported-on-2026-10-13.txt); outside it the policy must be absent.
+# off_on_rhel: Windows-only or Google Update setting; off by default on RHEL, so it must be absent.
+chrome_cis_expected:
+  - {rule: "1.1.1", level: 1, policy: AllowCrossOriginAuthPrompt, value: false}
+  - {rule: "1.2.1", level: 1, policy: SafeBrowsingAllowlistDomains, value: []}
+  - {rule: "1.3", level: 1, policy: MediaRouterCastAllowAllIPs, value: false}
+  - {rule: "1.4", level: 1, policy: BrowserNetworkTimeQueriesEnabled, value: true}
+  - {rule: "1.5", level: 1, policy: AudioSandboxEnabled, value: true}
+  - {rule: "1.6", level: 1, policy: PromptForDownloadLocation, value: true}
+  - {rule: "1.7", level: 1, policy: BackgroundModeEnabled, value: false}
+  - {rule: "1.8", level: 2, policy: SafeSitesFilterBehavior, value: 1}
+  - {rule: "1.10", level: 1, policy: CertificateTransparencyEnforcementDisabledForLegacyCas, value: [], versions: [67, 127]}
+  - {rule: "1.11", level: 1, policy: CertificateTransparencyEnforcementDisabledForCas, value: []}
+  - {rule: "1.12", level: 1, policy: CertificateTransparencyEnforcementDisabledForUrls, value: []}
+  - {rule: "1.13", level: 1, policy: SavingBrowserHistoryDisabled, value: false}
+  - {rule: "1.14", level: 1, policy: DNSInterceptionChecksEnabled, value: true}
+  - {rule: "1.15", level: 1, policy: ComponentUpdatesEnabled, value: true}
+  - {rule: "1.16", level: 1, policy: GloballyScopeHTTPAuthCacheEnabled, value: false}
+  - {rule: "1.17", level: 1, policy: EnableOnlineRevocationChecks, value: false}
+  - {rule: "1.18", level: 1, policy: CommandLineFlagSecurityWarningsEnabled, value: true}
+  - {rule: "1.19", level: 1, policy: ThirdPartyBlockingEnabled, value: true, off_on_rhel: true}
+  - {rule: "1.20", level: 1, policy: EnterpriseHardwarePlatformAPIEnabled, value: false}
+  - {rule: "1.21", level: 1, policy: ForceEphemeralProfiles, value: false}
+  - {rule: "1.22", level: 1, policy: ImportAutofillFormData, value: false}
+  - {rule: "1.23", level: 1, policy: ImportHomepage, value: false}
+  - {rule: "1.24", level: 1, policy: ImportSearchEngine, value: false}
+  - {rule: "1.25", level: 1, policy: HSTSPolicyBypassList, value: []}
+  - {rule: "1.26", level: 1, policy: OverrideSecurityRestrictionsOnInsecureOrigin, value: []}
+  - {rule: "1.27", level: 1, policy: LookalikeWarningAllowlistDomains, value: []}
+  - {rule: "1.28", level: 1, policy: SuppressUnsupportedOSWarning, value: false}
+  - {rule: "1.29", level: 1, policy: WebRtcLocalIpsAllowedUrls, value: []}
+  - {rule: "2.1.1", level: 1, policy: "Update{8A69D345-D564-463C-AFF1-A69D9E530F96}", value: 1, off_on_rhel: true}
+  - {rule: "2.1.2", level: 1, policy: AutoUpdateCheckPeriodMinutes, value: 1400, off_on_rhel: true}
+  - {rule: "2.2.1", level: 1, policy: DefaultInsecureContentSetting, value: 2}
+  - {rule: "2.2.2", level: 2, policy: DefaultWebBluetoothGuardSetting, value: 2}
+  - {rule: "2.2.3", level: 2, policy: DefaultWebUsbGuardSetting, value: 2}
+  - {rule: "2.2.4", level: 2, policy: DefaultNotificationsSetting, value: 2}
+  - {rule: "2.2.5", level: 1, policy: PdfLocalFileAccessAllowedForDomains, value: []}
+  - {rule: "2.3.1", level: 1, policy: BlockExternalExtensions, value: true}
+  - {rule: "2.3.2", level: 1, policy: ExtensionAllowedTypes, value: ["extension", "hosted_app", "platform_app", "theme"]}
+  - {rule: "2.3.3", level: 1, policy: ExtensionInstallBlocklist, value: ["*"]}
+  - {rule: "2.3.4", level: 2, policy: DefaultThirdPartyStoragePartitioningSetting, value: 2, versions: [113, 145]}
+  - {rule: "2.3.5", level: 1, policy: ThirdPartyStoragePartitioningBlockedForOrigins, value: ["https://example.com"], versions: [113, 145]}
+  - {rule: "2.3.6", level: 2, policy: ExtensionManifestV2Availability, value: 3, versions: [110, 138]}
+  - {rule: "2.3.7", level: 1, policy: ExtensionUnpublishedAvailability, value: 1}
+  - {rule: "2.4.1", level: 2, policy: AuthSchemes, value: "ntlm,negotiate"}
+  - {rule: "2.5.1", level: 2, policy: NativeMessagingBlocklist, value: ["*"]}
+  - {rule: "2.7.1", level: 1, policy: CloudPrintProxyEnabled, value: false, versions: [17, 144]}
+  - {rule: "2.8.2", level: 1, policy: RemoteAccessHostAllowUiAccessForRemoteAssistance, value: false, off_on_rhel: true}
+  - {rule: "2.8.4", level: 1, policy: RemoteAccessHostRequireCurtain, value: false}
+  - {rule: "2.8.5", level: 1, policy: RemoteAccessHostFirewallTraversal, value: false}
+  - {rule: "2.8.6", level: 1, policy: RemoteAccessHostAllowClientPairing, value: false}
+  - {rule: "2.8.7", level: 1, policy: RemoteAccessHostAllowRelayedConnection, value: false}
+  - {rule: "2.9.1", level: 1, policy: FirstPartySetsEnabled, value: false, versions: [113, 152]}
+  - {rule: "2.10.1", level: 1, policy: CloudAPAuthEnabled, value: true, off_on_rhel: true}
+  - {rule: "2.11", level: 1, policy: DownloadRestrictions, value: 4}
+  - {rule: "2.12", level: 2, policy: SSLErrorOverrideAllowed, value: false}
+  - {rule: "2.13", level: 1, policy: DisableSafeBrowsingProceedAnyway, value: true}
+  - {rule: "2.14", level: 1, policy: SitePerProcess, value: true}
+  - {rule: "2.15", level: 2, policy: ForceGoogleSafeSearch, value: true}
+  - {rule: "2.16", level: 1, policy: RelaunchNotification, value: 2}
+  - {rule: "2.18", level: 2, policy: RequireOnlineRevocationChecksForLocalAnchors, value: true}
+  - {rule: "2.19", level: 1, policy: RelaunchNotificationPeriod, value: 86400000}
+  - {rule: "2.20", level: 1, policy: AllowWebAuthnWithBrokenTlsCerts, value: false}
+  - {rule: "2.21", level: 1, policy: DomainReliabilityAllowed, value: false}
+  - {rule: "2.22", level: 1, policy: EncryptedClientHelloEnabled, value: true}
+  - {rule: "2.23", level: 2, policy: EnforceLocalAnchorConstraintsEnabled, value: true, versions: [112, 127]}
+  - {rule: "2.24", level: 1, policy: EnterpriseProfileCreationKeepBrowsingData, value: true}
+  - {rule: "2.25", level: 1, policy: FileOrDirectoryPickerWithoutGestureAllowedForOrigins, value: []}
+  - {rule: "2.26", level: 1, policy: GoogleSearchSidePanelEnabled, value: false}
+  - {rule: "2.28", level: 1, policy: HttpsUpgradesEnabled, value: true}
+  - {rule: "2.29", level: 1, policy: InsecureHashesInTLSHandshakesEnabled, value: false, versions: [114, 123]}
+  - {rule: "2.30", level: 1, policy: RendererAppContainerEnabled, value: true, off_on_rhel: true}
+  - {rule: "2.31", level: 1, policy: StrictMimetypeCheckForWorkerScriptsEnabled, value: true}
+  - {rule: "2.32", level: 1, policy: RemoteDebuggingAllowed, value: false}
+  - {rule: "3.1.1", level: 2, policy: DefaultCookiesSetting, value: 4}
+  - {rule: "3.1.2", level: 1, policy: DefaultGeolocationSetting, value: 2}
+  - {rule: "3.2.1", level: 1, policy: EnableMediaRouter, value: false}
+  - {rule: "3.3", level: 1, policy: PaymentMethodQueryEnabled, value: false}
+  - {rule: "3.4", level: 1, policy: BlockThirdPartyCookies, value: true}
+  - {rule: "3.5", level: 2, policy: BrowserSignin, value: 0}
+  - {rule: "3.6", level: 1, policy: ChromeCleanupReportingEnabled, value: false, off_on_rhel: true}
+  - {rule: "3.7", level: 1, policy: SyncDisabled, value: true}
+  - {rule: "3.8", level: 1, policy: AlternateErrorPagesEnabled, value: false}
+  - {rule: "3.9", level: 1, policy: AllowDeletingBrowserHistory, value: false}
+  - {rule: "3.10", level: 1, policy: NetworkPredictionOptions, value: 2}
+  - {rule: "3.11", level: 1, policy: SpellCheckServiceEnabled, value: false}
+  - {rule: "3.12", level: 1, policy: MetricsReportingEnabled, value: false}
+  - {rule: "3.13", level: 1, policy: SafeBrowsingForTrustedSourcesEnabled, value: false, off_on_rhel: true}
+  - {rule: "3.14", level: 2, policy: SearchSuggestEnabled, value: false}
+  - {rule: "3.15", level: 2, policy: TranslateEnabled, value: false}
+  - {rule: "3.16", level: 1, policy: UrlKeyedAnonymizedDataCollectionEnabled, value: false}
+  - {rule: "4.1.1", level: 2, policy: ScreenCaptureAllowed, value: false}
+  - {rule: "4.2.1", level: 2, policy: DefaultSerialGuardSetting, value: 2}
+  - {rule: "4.2.2", level: 2, policy: DefaultSensorsSetting, value: 2}
+  - {rule: "4.2.5", level: 1, policy: DefaultClipboardSetting, value: 2}
+  - {rule: "4.2.6", level: 2, policy: DefaultWindowManagementSetting, value: 2}
+  - {rule: "4.3", level: 2, policy: AllowFileSelectionDialogs, value: false}
+  - {rule: "4.4", level: 2, policy: AudioCaptureAllowed, value: false}
+  - {rule: "4.5", level: 2, policy: VideoCaptureAllowed, value: false}
+  - {rule: "4.6", level: 1, policy: UserFeedbackAllowed, value: false}
+  - {rule: "4.7", level: 2, policy: DnsOverHttpsMode, value: "secure"}
+  - {rule: "4.8", level: 2, policy: AutofillAddressEnabled, value: false}
+  - {rule: "4.9", level: 1, policy: AutofillCreditCardEnabled, value: false}
+  - {rule: "4.10", level: 1, policy: ImportSavedPasswords, value: false}
+  - {rule: "4.11", level: 1, policy: SyncTypesListDisabled, value: ["passwords"]}
+  - {rule: "4.12", level: 2, policy: ScreenCaptureAllowed, value: false}
+  - {rule: "5.1", level: 2, policy: BrowserGuestModeEnabled, value: false}
+  - {rule: "5.2", level: 2, policy: IncognitoModeAvailability, value: 1}
+  - {rule: "5.3", level: 1, policy: DiskCacheSize, value: 250609664}

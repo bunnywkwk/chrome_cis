@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+{% set failed = verify_results | rejectattr('pass') | list %}
+<testsuite name="CIS Google Chrome v3.0.0 | {{ inventory_hostname }}" tests="{{ verify_results | length + 1 }}" failures="{{ failed | length + (1 if verify_unexpected else 0) }}">
+  <properties>
+    <property name="browsers" value="{{ verify_browsers.items() | map('join', ' ') | join(', ') }}"/>
+    <property name="gate_version" value="{{ verify_major }}"/>
+    <property name="policy_folders" value="{{ verify_folders | join(', ') }}"/>
+  </properties>
+{% for r in verify_results %}
+{%   if r.off_on_rhel | default(false) %}
+{%     set note = ' (off on RHEL)' %}
+{%   elif r.versions is defined %}
+{%     set note = ' (versions ' ~ r.versions | join('-') ~ (': applied on ' if r.applies else ': not on ') ~ verify_major ~ ')' %}
+{%   else %}
+{%     set note = '' %}
+{%   endif %}
+  <testcase classname="{{ inventory_hostname }}.level{{ r.level }}" name="{{ r.rule }} {{ r.policy | e }}{{ note }}">
+{% if not r.pass %}
+    <failure message="expected {{ r.expected | to_json | e }}, found {{ r.actual | to_json | e }}"/>
+{% endif %}
+  </testcase>
+{% endfor %}
+  <testcase classname="{{ inventory_hostname }}.policy_file" name="no policies outside the benchmark">
+{% if verify_unexpected %}
+    <failure message="{{ verify_unexpected | join(', ') | e }}"/>
+{% endif %}
+  </testcase>
+</testsuite>
