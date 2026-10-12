@@ -3,12 +3,14 @@
 
 ## Browser and install
 
-# Browser to harden: chrome (Google Chrome) or chromium (Chromium from EPEL)
-chrome_cis_browser: chrome
+# The role finds Google Chrome and Chromium on each host by itself and hardens every one it finds.
+# The settings below are only used to install a browser.
 
-# Install the browser; false = harden an existing install only
-# Chromium: the role enables EPEL first (epel-release from the Fedora project)
+# Install a browser; false = harden what is already installed only
 chrome_cis_install: false
+
+# Browser to install: chrome (Google Chrome) or chromium (Chromium from EPEL; the role enables EPEL first)
+chrome_cis_install_browser: chrome
 
 # Google Chrome channel: stable, beta, unstable or canary
 chrome_cis_channel: stable

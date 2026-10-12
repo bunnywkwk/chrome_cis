@@ -15,22 +15,35 @@
       Unsupported target: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}.
       Supported: RHEL-family {{ chrome_cis_supported_os_majors | join('/') }}.
 
+# Install before looking, so one discovery also finds a browser installed in this run
+- name: "PRELIM | Install a browser (opt-in)"
+  when: chrome_cis_install
+  ansible.builtin.import_tasks:
+    file: install.yml
+
 - name: "PRELIM | AUDIT | Gather installed packages"
   ansible.builtin.package_facts:
     manager: rpm
 
-- name: "PRELIM | AUDIT | Stop when Chrome is not installed and install is off"
+# Any Chrome channel (google-chrome-stable/beta/unstable/canary) counts as Chrome
+- name: "PRELIM | AUDIT | Discover installed browsers"
+  ansible.builtin.set_fact:
+    chrome_cis_chrome_found: "{{ ansible_facts['packages'] | select('match', 'google-chrome-') | list | length > 0 }}"
+    chrome_cis_chromium_found: "{{ 'chromium' in ansible_facts['packages'] }}"
+
+- name: "PRELIM | AUDIT | Stop when no browser is installed and install is off"
   when:
-    - chrome_cis_installed | length == 0
+    - not chrome_cis_chrome_found
+    - not chrome_cis_chromium_found
     - not chrome_cis_install
   block:
-    - name: "PRELIM | AUDIT | Stop when Chrome is not installed and install is off | Report"
+    - name: "PRELIM | AUDIT | Stop when no browser is installed and install is off | Report"
       ansible.builtin.debug:
         msg: >-
-          No {{ chrome_cis_package }} package on {{ inventory_hostname }} and chrome_cis_install is false:
+          No Google Chrome or Chromium package on {{ inventory_hostname }} and chrome_cis_install is false:
           nothing to harden.
 
-    - name: "PRELIM | AUDIT | Stop when Chrome is not installed and install is off | End this host"
+    - name: "PRELIM | AUDIT | Stop when no browser is installed and install is off | End this host"
       ansible.builtin.meta: end_host
 
 # Every run starts empty: the policy file is rebuilt from the current settings, so a rule switched off is removed.
