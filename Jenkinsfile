@@ -44,7 +44,8 @@ pipeline {
         sh '''
           . /opt/molecule/bin/activate
           ansible --version | head -1
-          if [ "$OS" = all ]; then
+          # The first build of a new branch has no parameters yet: OS is empty there, so empty = all
+          if [ "${OS:-all}" = all ]; then
             molecule test
           else
             molecule test --platform-name "chrome-cis-$OS-$MOLECULE_RUN_ID"
