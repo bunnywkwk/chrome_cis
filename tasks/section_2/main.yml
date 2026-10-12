@@ -1,4 +1,8 @@
 ---
+- name: "SECTION 2 | 2.1 Google Update"
+  ansible.builtin.import_tasks:
+    file: cis_2.1.x.yml
+
 - name: "SECTION 2 | 2.2 Content settings"
   ansible.builtin.import_tasks:
     file: cis_2.2.x.yml

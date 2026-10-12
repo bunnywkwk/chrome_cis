@@ -499,7 +499,14 @@ chrome_cis_rule_2_30: true
 # 3.13 Safe Browsing checks for trusted download sources
 chrome_cis_rule_3_13: true
 
-### Google Update (Windows/macOS updater, not a Chrome policy, no switch)
+### Google Update (Windows/macOS updater, not a Chrome policy; off by default)
+# On RHEL, Chrome updates come from the google-chrome dnf repo; Chrome does not know these two settings.
 
 # 2.1.1 Automatic updates on
+chrome_cis_rule_2_1_1: false
+
 # 2.1.2 Update checks not turned off
+chrome_cis_rule_2_1_2: false
+
+# 2.1.2 value: minutes between update checks, anything but 0 (CIS default value: 1400)
+chrome_cis_update_check_minutes: 1400
