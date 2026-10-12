@@ -68,3 +68,104 @@ worked.
 
 **Prevent:** nothing in the role for now (a one-off mirror problem). If it repeats, add `retries`/`until` to the
 Chromium install task.
+
+## T-C6. Version gate: "'<=' not supported between instances of 'int' and 'AnsibleUnsafeText'"
+
+```
+fatal: [gate9]: FAILED! => {"msg": "The conditional check '67 <= chrome_cis_browser_major <= 127' failed. The error
+was: Unexpected templating type error occurred on (...): '<=' not supported between instances of 'int' and
+'AnsibleUnsafeText'. ..."}
+```
+
+**Cause:** `chrome_cis_browser_major` is set by `set_fact` from a template, so it is stored as text ("128"), not a
+number; Jinja cannot compare a number with text.
+
+**Fix:** convert in each gate: `67 <= chrome_cis_browser_major | int <= 127` (D17). Found in the container gate test
+before any VM run.
+
+**Prevent:** compare facts built from templates with `| int` (or `is version(...)`).
+
+## T-C7. Molecule converge: "the role 'chrome_cis' was not found"
+
+**When:** 2026-10-12, first manual `molecule test` in the CI image (`ci/Dockerfile`: molecule 26.9.0,
+ansible-core 2.16.19), branch `ci/molecule`. Create worked on Rocky 8/9/10; converge failed.
+
+```text
+TASK [Converge | Run the role from this checkout] ******************************
+ERROR! the role 'chrome_cis' was not found in /home/bunny/ansible-cis/chrome_cis/molecule/default/roles:/tmp/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:/home/bunny/ansible-cis/chrome_cis/molecule/default
+```
+
+**Cause:** `converge.yml` included the role by its folder name (`MOLECULE_PROJECT_DIRECTORY | basename`), which
+needs the role's parent folder on the roles path. Molecule 26 does not add it (the searched paths above don't include
+`/home/bunny/ansible-cis`).
+
+**Fix:** `include_role` with the full path: `name: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}"`.
+Works for any folder name (the Jenkins workspace is not called `chrome_cis`).
+
+**Prevent:** in molecule scenarios, include the role under test by path, not by name.
+
+## T-C8. Molecule verify: 21 rules fail with "expected 1, found "1""
+
+**When:** 2026-10-12, manual `molecule test` in the CI image (ansible-core 2.16.19). Converge, idempotence and check
+passed on Rocky 8/9/10; verify failed with 21 failures per host, all rules with a numeric value.
+
+```text
+<testcase classname="chrome-cis-el9-local.level2" name="1.8 SafeSitesFilterBehavior">
+  <failure message="expected 1, found &#34;1&#34;"/>
+```
+
+**Cause:** a bug in `verify.yml`, not in the role: the written file had numbers (`"SafeSitesFilterBehavior": 1`).
+The actual value was passed through a task-level `vars:` entry (`actual: "{{ ... | default('ABSENT') }}"`), and on
+ansible-core 2.16 it came back as the string `"1"`; booleans, strings and lists were not affected.
+
+**Fix:** read the value inline in the `set_fact` expression (no intermediate var).
+
+**Prevent:** in verify code, compare values inside one expression; keep the strict type check (Chrome rejects `"1"`
+where it expects an integer).
+
+## T-C9. Molecule verify: final assert fails although every rule passed
+
+**When:** 2026-10-12, rerun after T-C8, `molecule test -p chrome-cis-el9-local`. The JUnit report had 0 failures
+(104 rules + extra-policy check), but `verify: Executed: Failed`.
+
+```text
+default > verify: Executed: Failed (Ansible return code was 2, command was: ansible-playbook --inventory /tmp/.ansible/tmp/molecule.x8jt.default/inventory --skip-tags molecule-notest,notest /home/bunny/ansible-cis/chrome_cis/molecule/default/verify.yml)
+```
+
+Reproduced in the CI image:
+
+```text
+localhost | FAILED! => {
+    "msg": "Incorrect type for fail_msg or msg, expected a string or list and got <class 'dict'>"
+}
+```
+
+**Cause:** the last `assert` in `verify.yml` had a dict as `fail_msg`; `assert` accepts only a string or a list and
+checks the type before evaluating `that`, so it failed even with every condition true.
+
+**Fix:** `fail_msg` as a list of two strings (failed rules, unexpected policies).
+
+**Prevent:** `fail_msg`/`success_msg` are always a string or a list of strings.
+
+## T-C10. Jenkins first build of a branch: "Instances missing from the 'platform' section of molecule.yml"
+
+**When:** 2026-10-12, Jenkins job `chrome-cis`, build #1 of `version-policy-rule` (first build on the agent
+`kvm-agent-01`), stage Compliance test:
+
+```
+22:03:12  + '[' '' = all ']'
+22:03:12  + molecule test --platform-name chrome-cis--jenkins-chrome-cis-version-policy-rule-1
+...
+22:03:13  ERROR    Instances missing from the 'platform' section of molecule.yml.
+...
+ERROR: script returned exit code 4
+```
+
+**Cause:** the first build of a new branch runs before Jenkins has read the Jenkinsfile's `parameters` block, so
+`OS` is empty, not `all`. The script took the "one OS" path with an empty OS: platform name `chrome-cis--...`, which
+does not exist.
+
+**Fix:** `Jenkinsfile` treats an empty `OS` as `all`: `if [ "${OS:-all}" = all ]`.
+
+**Prevent:** give every Jenkins parameter a shell default (`${PARAM:-default}`); the first build of each new branch
+or PR never has parameters.

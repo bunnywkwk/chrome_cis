@@ -223,6 +223,39 @@ Scope: **Google Chrome (`google-chrome-*` RPM) on RHEL 8, 9, 10**, CIS Google Ch
   benchmark: the role is "aligned with the CIS Google Chrome Benchmark"; which rules work on Chromium is to be
   confirmed with `chrome://policy` on a VM (CLAUDE.md "No benchmark for the target", rule mapping later).
 
+## D17. Version gates for policies removed from Chrome (2026-10-13)
+
+- **Decision:** the 8 CIS policies that Chrome removed but that existed on Linux are written only when the browser
+  version is inside the policy's `supported_on` range: one `when` line per rule, e.g.
+  `113 <= chrome_cis_browser_major | int <= 145`. `chrome_cis_browser_major` = lowest major version of the browsers found
+  (prelim discovery). Toggles stay `true`; tag `version_gated`. The 6 Windows-only policies and the 2 Google Update
+  settings have no Linux range: toggles `false` by default, tag `not_applicable`. Revises D8 (N/A rules).
+- **Why:** mentor review: a removed policy may still work on older versions; apply it where it works, skip it where
+  it would only show "Unknown policy". Lowest version, because one file serves both browsers: the policy is enforced
+  in the older browser and only shows an error in the newer one.
+- **Evidence:** ranges from Chromium's policy definitions (the source of Google's policy template),
+  `evidence-files/chromium-supported-on-2026-10-13.txt`. VM test (test repo `docs/na-policy-test.md`): Chrome 155 and
+  Chromium 154: all 16 Error; Chrome 143.0.7499.40: 4 OK (the ranges predict 2.3.4, 2.3.5, 2.7.1, 2.9.1; names to
+  confirm from the screenshot).
+- **Gate test (container, 2026-10-13):** Rocky 9, fake RPMs `chromium` / `google-chrome-stable` at chosen versions
+  (discovery only reads name + version), real role run, Level 2, 2.3.5 value set. Gated policies written:
+  Chromium 120: all 8; 128: 2.3.4 2.3.5 2.3.6 2.7.1 2.9.1; 133: same; Chrome 143: 2.3.4 2.3.5 2.7.1 2.9.1;
+  145: 2.3.4 2.3.5 2.9.1; 146: 2.9.1; Chromium 152: 2.9.1; 153 and Chrome 155: none; Chrome 143 + Chromium 154:
+  the Chrome 143 set into both folders. Every edge (127/128, 138/143, 144/145, 145/146, 152/153) as the ranges say;
+  `failed=0` in all. Found and fixed T-C6 on the way.
+- **Limits:** ranges read from Chromium `main` on 2026-10-13; a policy removed later needs its range added.
+
+| Rule | Policy | Range | Oldest installable (Chrome 143, Chromium 133 on EL8) |
+|---|---|---|---|
+| 1.10 | `CertificateTransparencyEnforcementDisabledForLegacyCas` | 67-127 | never |
+| 2.3.4 | `DefaultThirdPartyStoragePartitioningSetting` | 113-145 | Chrome 143-145, Chromium 133 |
+| 2.3.5 | `ThirdPartyStoragePartitioningBlockedForOrigins` | 113-145 | Chrome 143-145, Chromium 133 |
+| 2.3.6 | `ExtensionManifestV2Availability` | 110-138 | Chromium 133 only |
+| 2.7.1 | `CloudPrintProxyEnabled` | 17-144 | Chrome 143-144, Chromium 133 |
+| 2.9.1 | `FirstPartySetsEnabled` | 113-152 | Chrome 143-152, Chromium 133 |
+| 2.23 | `EnforceLocalAnchorConstraintsEnabled` | 112-127 | never |
+| 2.29 | `InsecureHashesInTLSHandshakesEnabled` | 114-123 | never |
+
 ## Not adopted
 
 | Idea | Why not |

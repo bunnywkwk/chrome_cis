@@ -1,0 +1,12 @@
+---
+# el10 gets Chromium before the role runs; the role then installs Chrome and must harden both.
+- name: Prepare | Chromium next to Chrome
+  hosts: chrome_and_chromium
+  gather_facts: true
+  tasks:
+    - name: Prepare | Install Chromium with the role's own install tasks
+      ansible.builtin.include_role:
+        name: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}"
+        tasks_from: install.yml
+      vars:
+        chrome_cis_install_browser: chromium

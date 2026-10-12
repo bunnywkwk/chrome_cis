@@ -1,0 +1,61 @@
+---
+# CI compliance test, one browser case per host:
+#   el8   Chromium from EPEL 8 (frozen at 133): gated policies inside their range are written
+#   el9   Google Chrome 143 (an old RPM Google still serves): a different set of gated policies
+#   el10  newest Chrome + newest Chromium: two policy folders, no gated policy
+# Rootless podman on the agent VM runs the containers.
+# Containers prove the policy files only; the browser reading them (chrome://policy) stays a VM test.
+dependency:
+  name: galaxy
+  options:
+    requirements-file: molecule/default/requirements.yml
+driver:
+  name: podman
+platforms:
+  # Names carry the CI run id so two branches building at once do not share containers.
+  - name: "chrome-cis-el8-${MOLECULE_RUN_ID:-local}"
+    hostname: el8
+    image: docker.io/rockylinux/rockylinux:8
+    pre_build_image: true
+    groups:
+      - chromium
+  - name: "chrome-cis-el9-${MOLECULE_RUN_ID:-local}"
+    hostname: el9
+    image: docker.io/rockylinux/rockylinux:9
+    pre_build_image: true
+    groups:
+      - chrome_old
+  - name: "chrome-cis-el10-${MOLECULE_RUN_ID:-local}"
+    hostname: el10
+    image: docker.io/rockylinux/rockylinux:10
+    pre_build_image: true
+    groups:
+      - chrome_and_chromium
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      all:
+        chrome_cis_install: true
+        chrome_cis_level_2: true
+        # 2.3.5 site value, so its version gate is tested too
+        chrome_cis_third_party_storage_blocked_origins: ["https://example.com"]
+      chromium:
+        chrome_cis_install_browser: chromium
+      chrome_old:
+        # Oldest Chrome RPM on Google's server on 2026-10-09; Google drops RPMs about a year after release
+        chrome_cis_version: "143.0.7499.40"
+verifier:
+  name: ansible
+scenario:
+  test_sequence:
+    - dependency
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - check
+    - verify
+    - destroy

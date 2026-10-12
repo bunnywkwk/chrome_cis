@@ -14,21 +14,9 @@ chrome_cis_repo_key_url: https://dl.google.com/linux/linux_signing_key.pub
 chrome_cis_epel_release_url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
 chrome_cis_epel_key_url: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ ansible_facts['distribution_major_version'] }}"
 
-# Per browser: installed package name and the folder the browser reads its managed policies from (D2)
-chrome_cis_browsers:
-  chrome:
-    package: "google-chrome-{{ chrome_cis_channel }}"
-    policy_dir: /etc/opt/chrome/policies/managed
-  chromium:
-    package: chromium
-    policy_dir: /etc/chromium/policies/managed
-
-chrome_cis_package: "{{ chrome_cis_browsers[chrome_cis_browser].package }}"
-chrome_cis_policy_dir: "{{ chrome_cis_browsers[chrome_cis_browser].policy_dir }}"
 chrome_cis_policy_file: chrome_cis.json
 
-# Installed browser package as {name: version}, e.g. {"google-chrome-stable": "155.0.8059.39"} (D10)
-# Empty dict = not installed (prelim checks its length); the report prints it as is.
-chrome_cis_installed: >-
-  {{ ansible_facts['packages'] | default({}) | dict2items | selectattr('key', 'eq', chrome_cis_package)
-     | map(attribute='value') | map('first') | items2dict(key_name='name', value_name='version') }}
+# Policy folders of the browsers found by prelim.yml (D2, D16); post.yml writes the same file into each one
+chrome_cis_policy_dirs: >-
+  {{ (['/etc/opt/chrome/policies/managed'] if chrome_cis_chrome_found else [])
+   + (['/etc/chromium/policies/managed'] if chrome_cis_chromium_found else []) }}
