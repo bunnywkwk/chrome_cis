@@ -68,3 +68,19 @@ worked.
 
 **Prevent:** nothing in the role for now (a one-off mirror problem). If it repeats, add `retries`/`until` to the
 Chromium install task.
+
+## T-C6. Version gate: "'<=' not supported between instances of 'int' and 'AnsibleUnsafeText'"
+
+```
+fatal: [gate9]: FAILED! => {"msg": "The conditional check '67 <= chrome_cis_browser_major <= 127' failed. The error
+was: Unexpected templating type error occurred on (...): '<=' not supported between instances of 'int' and
+'AnsibleUnsafeText'. ..."}
+```
+
+**Cause:** `chrome_cis_browser_major` is set by `set_fact` from a template, so it is stored as text ("128"), not a
+number; Jinja cannot compare a number with text.
+
+**Fix:** convert in each gate: `67 <= chrome_cis_browser_major | int <= 127` (D17). Found in the container gate test
+before any VM run.
+
+**Prevent:** compare facts built from templates with `| int` (or `is version(...)`).

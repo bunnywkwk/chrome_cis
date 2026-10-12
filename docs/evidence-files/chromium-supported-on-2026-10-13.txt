@@ -1,0 +1,48 @@
+# supported_on of the 14 CIS N/A policies in Chromium's policy definitions (fetched 2026-10-13, branch main)
+# Source: https://chromium.googlesource.com/chromium/src/+/main/components/policy/resources/templates/policy_definitions/<file>
+# chrome.* = Chrome and Chromium on Windows, Mac and Linux; chrome.win = Windows only; 'NN-' = still supported
+
+Miscellaneous/CertificateTransparencyEnforcementDisabledForLegacyCas.yaml
+  - chrome.*:67-127
+  - chrome_os:67-127
+  - android:67-127
+Miscellaneous/ThirdPartyBlockingEnabled.yaml
+  - chrome.win:65-135
+ContentSettings/DefaultThirdPartyStoragePartitioningSetting.yaml
+  - android:113-145
+  - chrome.*:113-145
+  - chrome_os:113-145
+ContentSettings/ThirdPartyStoragePartitioningBlockedForOrigins.yaml
+  - android:113-145
+  - chrome.*:113-145
+  - chrome_os:113-145
+Extensions/ExtensionManifestV2Availability.yaml
+  - chrome.*:110-138
+  - chrome_os:110-138
+Printing/CloudPrintProxyEnabled.yaml
+  - chrome.*:17-144
+RemoteAccess/RemoteAccessHostAllowUiAccessForRemoteAssistance.yaml
+  - chrome.win:55-
+FirstPartySets/FirstPartySetsEnabled.yaml
+  - chrome.*:113-152
+  - chrome_os:113-152
+  - android:113-152
+  - fuchsia:113-152
+ActiveDirectoryManagement/CloudAPAuthEnabled.yaml
+  - chrome.win:111-
+Miscellaneous/EnforceLocalAnchorConstraintsEnabled.yaml
+  - chrome.win:112-127
+  - chrome.mac:112-127
+  - chrome.linux:112-127
+  - chrome_os:112-127
+Miscellaneous/InsecureHashesInTLSHandshakesEnabled.yaml
+  - chrome.*:114-123
+  - chrome_os:114-123
+  - android:114-123
+  - fuchsia:114-123
+Miscellaneous/RendererAppContainerEnabled.yaml
+  - chrome.win:104-
+Miscellaneous/ChromeCleanupReportingEnabled.yaml
+  - chrome.win:68-118
+Miscellaneous/SafeBrowsingForTrustedSourcesEnabled.yaml
+  - chrome.win:61-

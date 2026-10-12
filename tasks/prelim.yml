@@ -30,6 +30,10 @@
   ansible.builtin.set_fact:
     chrome_cis_chrome_found: "{{ ansible_facts['packages'] | select('match', 'google-chrome-') | list | length > 0 }}"
     chrome_cis_chromium_found: "{{ 'chromium' in ansible_facts['packages'] }}"
+    # Lowest major version of the browsers found, e.g. 143 for Chrome 143 + Chromium 154 (0 = none)
+    chrome_cis_browser_major: >-
+      {{ ansible_facts['packages'] | dict2items | selectattr('key', 'match', 'google-chrome-|chromium$')
+         | map(attribute='value.0.version') | map('regex_replace', '[.].*', '') | map('int') | min | default(0, true) }}
 
 - name: "PRELIM | AUDIT | Stop when no browser is installed and install is off"
   when:
