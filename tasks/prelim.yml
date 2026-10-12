@@ -1,0 +1,39 @@
+---
+
+- name: "PRELIM | AUDIT | Check ansible-core version"
+  ansible.builtin.assert:
+    that:
+      - ansible_version.full is version('2.16.1', '>=')
+    fail_msg: "chrome_cis needs ansible-core >= 2.16.1 (found {{ ansible_version.full }})."
+
+- name: "PRELIM | AUDIT | Check the target OS is supported"
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['os_family'] == 'RedHat'
+      - ansible_facts['distribution_major_version'] in chrome_cis_supported_os_majors
+    fail_msg: >-
+      Unsupported target: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}.
+      Supported: RHEL-family {{ chrome_cis_supported_os_majors | join('/') }}.
+
+- name: "PRELIM | AUDIT | Gather installed packages"
+  ansible.builtin.package_facts:
+    manager: rpm
+
+- name: "PRELIM | AUDIT | Stop when Chrome is not installed and install is off"
+  when:
+    - chrome_cis_installed | length == 0
+    - not chrome_cis_install
+  block:
+    - name: "PRELIM | AUDIT | Stop when Chrome is not installed and install is off | Report"
+      ansible.builtin.debug:
+        msg: >-
+          No {{ chrome_cis_package }} package on {{ inventory_hostname }} and chrome_cis_install is false:
+          nothing to harden.
+
+    - name: "PRELIM | AUDIT | Stop when Chrome is not installed and install is off | End this host"
+      ansible.builtin.meta: end_host
+
+# Every run starts empty: the policy file is rebuilt from the current settings, so a rule switched off is removed.
+- name: "PRELIM | AUDIT | Start the policy set"
+  ansible.builtin.set_fact:
+    chrome_cis_policies: {}

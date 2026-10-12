@@ -1,0 +1,26 @@
+---
+galaxy_info:
+  author: "Aeron Trainee at AIRNAV"
+  description: "Harden Google Chrome on RHEL 8/9/10 to the CIS Google Chrome Benchmark v3.0.0 (managed policy JSON)"
+  license: MIT
+  role_name: chrome_cis
+  namespace: bunnywkwk
+  min_ansible_version: "2.16.1"
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+        - "10"
+  galaxy_tags:
+    - security
+    - hardening
+    - compliance
+    - benchmark
+    - cis
+    - chrome
+    - browser
+    - rhel8
+    - rhel9
+    - rhel10
+dependencies: []

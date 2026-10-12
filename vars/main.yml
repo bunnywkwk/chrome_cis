@@ -1,0 +1,34 @@
+---
+# Internal values, not meant to be overridden. User settings are in defaults/main.yml.
+# Decisions: docs/design-decisions.md (Dn). Rule data: docs/cis-requirements.md.
+
+chrome_cis_benchmark: "CIS Google Chrome Benchmark v3.0.0"
+chrome_cis_supported_os_majors: ["8", "9", "10"]
+chrome_cis_channels: [stable, beta, unstable, canary]
+
+# Same repo as Google's own /etc/yum.repos.d/google-chrome.repo; it holds every channel (D9, D10)
+chrome_cis_repo_baseurl: https://dl.google.com/linux/chrome/rpm/stable/x86_64
+chrome_cis_repo_key_url: https://dl.google.com/linux/linux_signing_key.pub
+
+# EPEL for Chromium (D15): the Fedora project's release package and signing key for this EL major version
+chrome_cis_epel_release_url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+chrome_cis_epel_key_url: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ ansible_facts['distribution_major_version'] }}"
+
+# Per browser: installed package name and the folder the browser reads its managed policies from (D2)
+chrome_cis_browsers:
+  chrome:
+    package: "google-chrome-{{ chrome_cis_channel }}"
+    policy_dir: /etc/opt/chrome/policies/managed
+  chromium:
+    package: chromium
+    policy_dir: /etc/chromium/policies/managed
+
+chrome_cis_package: "{{ chrome_cis_browsers[chrome_cis_browser].package }}"
+chrome_cis_policy_dir: "{{ chrome_cis_browsers[chrome_cis_browser].policy_dir }}"
+chrome_cis_policy_file: chrome_cis.json
+
+# Installed browser package as {name: version}, e.g. {"google-chrome-stable": "155.0.8059.39"} (D10)
+# Empty dict = not installed (prelim checks its length); the report prints it as is.
+chrome_cis_installed: >-
+  {{ ansible_facts['packages'] | default({}) | dict2items | selectattr('key', 'eq', chrome_cis_package)
+     | map(attribute='value') | map('first') | items2dict(key_name='name', value_name='version') }}
