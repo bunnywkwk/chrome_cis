@@ -1,22 +1,21 @@
 ---
 # Internal values, not meant to be overridden. User settings are in defaults/main.yml.
-# Decisions: docs/design-decisions.md (Dn). Rule data: docs/cis-requirements.md.
 
 chrome_cis_benchmark: "CIS Google Chrome Benchmark v3.0.0"
 chrome_cis_supported_os_majors: ["8", "9", "10"]
 chrome_cis_channels: [stable, beta, unstable, canary]
 
-# Same repo as Google's own /etc/yum.repos.d/google-chrome.repo; it holds every channel (D9, D10)
+# Same repo as Google's own /etc/yum.repos.d/google-chrome.repo; it holds every channel
 chrome_cis_repo_baseurl: https://dl.google.com/linux/chrome/rpm/stable/x86_64
 chrome_cis_repo_key_url: https://dl.google.com/linux/linux_signing_key.pub
 
-# EPEL for Chromium (D15): the Fedora project's release package and signing key for this EL major version
+# EPEL for Chromium: the Fedora project's release package and signing key for this EL major version
 chrome_cis_epel_release_url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
 chrome_cis_epel_key_url: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ ansible_facts['distribution_major_version'] }}"
 
 chrome_cis_policy_file: chrome_cis.json
 
-# Policy folders of the browsers found by prelim.yml (D2, D16); post.yml writes the same file into each one
+# Policy folders of the browsers found by prelim.yml; post.yml writes the same file into each one
 chrome_cis_policy_dirs: >-
   {{ (['/etc/opt/chrome/policies/managed'] if chrome_cis_chrome_found else [])
    + (['/etc/chromium/policies/managed'] if chrome_cis_chromium_found else []) }}
