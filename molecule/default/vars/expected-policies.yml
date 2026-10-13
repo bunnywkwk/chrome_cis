@@ -1,6 +1,6 @@
 ---
 # Expected policy values for this scenario (Level 1 + Level 2; site value set only for 2.3.5, so its gate is tested).
-# Source: CIS Google Chrome Benchmark v3.0.0, via docs/cis-requirements.md, not the role tasks.
+# Source: CIS Google Chrome Benchmark v3.0.0, via docs/files/cis-requirements.md, not the role tasks.
 # "Disabled" exception lists are expected as [] (role decision D7).
 # versions: [first, last] = supported_on range in Chromium's policy definitions
 #   (docs/evidence-files/chromium-supported-on-2026-10-13.txt); outside it the policy must be absent.
