@@ -169,3 +169,27 @@ does not exist.
 
 **Prevent:** give every Jenkins parameter a shell default (`${PARAM:-default}`); the first build of each new branch
 or PR never has parameters.
+
+## T-C11. CI idempotence: "The read operation timed out" from dl.google.com
+
+**Seen:** 2026-10-13, laptop Jenkins, branch build `version-policy-rule` #4. Converge passed on all three containers;
+the second run (idempotence) failed on el10 and el9 while contacting Google, el8 (Chromium, EPEL) passed with
+`changed=0`:
+
+```
+22:58:16  fatal: [chrome-cis-el10-jenkins-chrome-cis-version-policy-rule-4]: FAILED! => {"changed": false, "msg": "failed to fetch key at https://dl.google.com/linux/linux_signing_key.pub , error was: Connection failure: The read operation timed out"}
+22:58:55  fatal: [chrome-cis-el9-jenkins-chrome-cis-version-policy-rule-4]: FAILED! => {"changed": false, "msg": "Failure downloading https://dl.google.com/linux/chrome/rpm/stable/x86_64/google-chrome-stable-143.0.7499.40-1.x86_64.rpm, The read operation timed out"}
+...
+22:59:18  default > idempotence: Executed: Failed (Ansible return code was 2, ...)
+```
+
+**Cause:** network timeout to `dl.google.com`, not the role: no task reported `changed`. The install tasks contact
+Google on every run, also when Chrome is already installed: `rpm_key` with a URL downloads the key to compare it, and
+the `dnf` module downloads an RPM given by URL (the pinned Chrome 143 on el9) before it can see it is installed.
+
+**Fix:** rebuild the branch.
+
+**Prevent (done 2026-10-13, test only, role unchanged):** `molecule/default/prepare.yml` installs the browsers once with
+the role's install tasks, one host at a time (`serial: 1`); `molecule.yml` sets `chrome_cis_install: false`, so
+converge, idempotence and check only harden and need no network. The install path keeps its full test (install +
+idempotence) in the VM scenario on pull requests. The air-gapped lab bakes the browsers into the test images instead.
