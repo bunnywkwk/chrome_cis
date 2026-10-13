@@ -1,12 +1,22 @@
 ---
-# el10 gets Chromium before the role runs; the role then installs Chrome and must harden both.
-- name: Prepare | Chromium next to Chrome
-  hosts: chrome_and_chromium
+# Installs the browsers under test once, with the role's own install tasks and each host's group_vars:
+#   el8 Chromium (group chromium), el9 Chrome 143 (chrome_old), el10 Chromium + newest Chrome (chrome_and_chromium).
+# Converge then only hardens (chrome_cis_install: false), so idempotence and check need no network (T-C11).
+- name: Prepare | Install the browsers under test
+  hosts: all
   gather_facts: true
+  # One host at a time: three parallel downloads from Google/EPEL time out through rootless podman's network (T-C11)
+  serial: 1
   tasks:
-    - name: Prepare | Install Chromium with the role's own install tasks
+    - name: Prepare | Chromium next to Chrome on el10
+      when: "'chrome_and_chromium' in group_names"
       ansible.builtin.include_role:
         name: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}"
         tasks_from: install.yml
       vars:
         chrome_cis_install_browser: chromium
+
+    - name: Prepare | The host's browser
+      ansible.builtin.include_role:
+        name: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}"
+        tasks_from: install.yml
