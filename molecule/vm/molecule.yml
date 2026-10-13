@@ -1,0 +1,37 @@
+---
+# Pull request test on a real VM: RHEL 9 from the golden image (ansible-cis golden-images/), created by Terraform on the
+# laptop's KVM (terraform/). The role installs Google Chrome (newest) like a real site, then hardens it.
+# Same converge, verify and expected values as the container scenario, so the evidence is comparable.
+driver:
+  name: default
+  options:
+    managed: true
+platforms:
+  - name: "chrome-cis-vm-el9-${MOLECULE_RUN_ID:-local}"
+provisioner:
+  name: ansible
+  playbooks:
+    create: create.yml
+    destroy: destroy.yml
+    converge: ../default/converge.yml
+    verify: ../default/verify.yml
+  inventory:
+    group_vars:
+      all:
+        chrome_cis_install: true
+        chrome_cis_level_2: true
+        # 2.3.5 site value, so its version gate is tested too
+        chrome_cis_third_party_storage_blocked_origins: ["https://example.com"]
+verifier:
+  name: ansible
+scenario:
+  # No dependency step: the collections are on the agent; no prepare step: the golden image is ready.
+  test_sequence:
+    - destroy
+    - syntax
+    - create
+    - converge
+    - idempotence
+    - check
+    - verify
+    - destroy

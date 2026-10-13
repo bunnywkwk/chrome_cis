@@ -4,3 +4,6 @@ cis-spreadsheet/
 *.pdf
 *.xlsx
 reports/
+.terraform/
+*.tfstate
+*.tfstate.*
